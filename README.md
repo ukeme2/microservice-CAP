@@ -4,6 +4,14 @@
 
 The goal of this project is to deploy a microservices-based application using Infrastructure as Code (IaaC) on Kubernetes. This README provides a step-by-step guide to automate the deployment process, ensuring clarity, maintenance, and security.
 
+# Prerequites
+
+. Terraform installed
+
+. AWS cli
+
+. Jenkins installed and configured with github account
+
 # Setting up the EKS cluster on AWS
 
 ## Defining provider;
@@ -119,3 +127,41 @@ These resources attach IAM policies to the IAM role created earlier.
 eks_AmazonEKSClusterPolicy attaches the AmazonEKSClusterPolicy IAM policy to the eks_master_role. This policy provides the necessary permissions for Amazon EKS cluster operations.
 
 eks_AmazonEKSVPCResourceController attaches the AmazonEKSVPCResourceController IAM policy to the eks_master_role. This policy grants permissions needed for VPC resource controller operations.
+
+![node](/pictures/node.png)
+the terraform code above simply creates an IAM role for the node group and also attach policies to them
+
+## create the kubernetes cluster on AWS
+
+![k8s](/pictures/k8s.png)
+
+This Terraform code above defines an AWS EKS (Amazon Elastic Kubernetes Service) cluster resource.
+
+name: Specifies the name of the EKS cluster. It's constructed using the combination of business_division and environment (from local.name) along with cluster_name (a variable) to ensure uniqueness.
+
+role_arn: Specifies the Amazon Resource Name (ARN) of the IAM role that grants permissions to the EKS cluster control plane. It references the IAM role created earlier for the EKS master node.
+
+version: Specifies the Kubernetes version for the EKS cluster. This is determined by the cluster_version variable.
+
+vpc_config: Specifies the VPC configuration for the EKS cluster.
+subnet_ids: Specifies the IDs of the subnets where the EKS Elastic Network Interfaces (ENIs) will be created. It references the public subnets created by the VPC module.
+
+endpoint_private_access: Specifies whether the cluster's Kubernetes API server can receive requests from within the VPC.
+
+endpoint_public_access: Specifies whether the cluster's Kubernetes API server can receive requests from outside the VPC.
+
+public_access_cidrs: Specifies the CIDR blocks that are allowed to access the Kubernetes API server if endpoint_public_access is enabled.
+
+kubernetes_network_config: Specifies the Kubernetes network configuration for the cluster.
+
+service_ipv4_cidr: Specifies the CIDR range for Kubernetes service IP addresses.
+
+enabled_cluster_log_types: Specifies the types of logs to enable for the EKS cluster control plane. In this case, API server logs, audit logs, authenticator logs, controller manager logs, and scheduler logs are enabled.
+
+depends_on: Specifies dependencies for the EKS cluster resource. It ensures that IAM role permissions are created before and deleted after handling the EKS cluster. This is important for proper management of EKS-managed EC2 infrastructure such as security groups.
+
+## tfvars
+
+A couple of .tfvars was also created.
+
+A .tfvars file in Terraform is used to set and override input variables for your Terraform configurations. These files are often used to store sensitive or environment-specific values separately from your main Terraform configuration files.
